@@ -16,9 +16,9 @@ The program will log in the console the progress of the operation, like "Reading
 
 The program will handle errors gracefully, like "Source file not found", "Error parsing html", "Error saving output file", etc.
 
-The program will be written in Node.js and will use libraries like `fs` for file operations, `cheerio` for html parsing, and `pdfkit` for pdf generation if needed.
-
 The program will be run from the command line, and will provide a simple and user-friendly interface for the user to interact with.
+
+The entry point of the program will be a file named `main.js`, which will contain the main logic of the program.
 
 # Output format example
 
