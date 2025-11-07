@@ -2,6 +2,8 @@
 
 A simple and efficient Node.js application to extract and save Reddit thread comments from HTML files.
 
+> You must have node and npm installed on your machine to run this application.
+
 ## Features
 
 - 📥 Extract all comments from a Reddit thread HTML file
@@ -34,7 +36,7 @@ npm install
 2. Right-click anywhere on the page and select **"Save As"** or **"Save Page As"**
 3. Save the complete HTML file as `source.html` in the project directory
 
-### Step 2: Run the Downloader
+### Step 2: Run the Scraper
 
 ```bash
 npm start
