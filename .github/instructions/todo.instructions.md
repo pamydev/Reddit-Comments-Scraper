@@ -12,7 +12,7 @@ The program will ask either the name of the output file or will generate a defau
 
 The program will save the output file in the same folder as the script.
 
-The program will log in the console the progress of the operation, like "Reading source file...", "Parsing comments...", "Saving output file...", etc.
+The program will log in the console the progress of the operation, like "Reading source file...", "Parsing comments...", "Saving output file...", etc. It will provide a percentage of done work with animated progress bar.
 
 The program will handle errors gracefully, like "Source file not found", "Error parsing html", "Error saving output file", etc.
 
@@ -22,13 +22,39 @@ The program will be run from the command line, and will provide a simple and use
 
 # Output format example
 
-```
-Reddit Thread Title
-====================
-Comment by u/username1:
-This is the first comment in the thread.
-Comment by u/username2:
-This is the second comment in the thread.
-Comment by u/username3:
-This is the third comment in the thread.
-```
+I don't need the name of the user who posted the comment, just the comment text itself, in a clean format.
+
+- Separate each comment with a dashed line for better readability.
+
+# How to scrappe the reddit thread html
+
+Reddit `./source.html` page has this kind of structure for comments:
+
+````html
+<div
+  class="md text-14-scalable rounded-2 pb-2xs overflow-hidden"
+  id="t1_nnl2b0k-comment-rtjson-content"
+  slot="comment">
+  <div
+    id="t1_nnl2b0k-post-rtjson-content"
+    class="py-0 xs:mx-xs mx-2xs max-w-full scalable-text"
+    style="--emote-size: 20px">
+    <p>Classes. I like having 1 character</p>
+  </div>
+</div>
+``` The comment text is inside the `
+<p>` tag, which is inside a `</p>
+<div>
+  `, which is inside another div with attribute `slot="comment"`. You must parse
+  the html to find all `
+  <div>
+    ` elements with attribute `slot="comment"`, then get the inner `
+    <p>` tag text. Comments can have a lot of `</p>
+
+    <p>` tags if they have multiple paragraphs, so you must get all `</p>
+    <p>
+      ` tags inside the comment div and join their text with double new lines.
+    </p>
+  </div>
+</div>
+````
