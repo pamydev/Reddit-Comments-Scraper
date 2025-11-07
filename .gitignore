@@ -1,1 +1,26 @@
 node_modules
+**source**
+// pdf
+*.pdf
+// word
+*.doc
+*.docx
+// excel
+*.xls
+*.xlsx
+// presentations
+*.ppt
+*.pptx
+// open office
+*.odt
+*.ods
+*.odp
+// text files
+*.txt
+*.rtf
+// archives
+*.zip
+*.rar
+*.7z
+*.tar
+*.gz
