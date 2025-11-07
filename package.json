@@ -16,5 +16,11 @@
     "url": "https://github.com/pamydev/Reddit-Thread-Downloader/issues"
   },
   "homepage": "https://github.com/pamydev/Reddit-Thread-Downloader#readme",
-  "description": ""
+  "description": "",
+  "dependencies": {
+    "cheerio": "^1.1.2",
+    "cli-progress": "^3.12.0",
+    "inquirer": "^8.2.7",
+    "pdfkit": "^0.17.2"
+  }
 }
