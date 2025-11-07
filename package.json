@@ -1,0 +1,20 @@
+{
+  "name": "reddit-thread-downloader",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node main.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pamydev/Reddit-Thread-Downloader.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/pamydev/Reddit-Thread-Downloader/issues"
+  },
+  "homepage": "https://github.com/pamydev/Reddit-Thread-Downloader#readme",
+  "description": ""
+}
