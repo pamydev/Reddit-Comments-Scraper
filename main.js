@@ -74,11 +74,23 @@ async function generateMdFile(comments, filename) {
 /**
  * Generate PDF file output
  * @param {Array<string>} comments - Array of comments
- * @param {string} filename - Output filename
+ * @param {string} filename - Output filename with extension
+ * @param {string} title - Title for the PDF document
+ * @param {number} fontSize - Font size for comments
+ * @param {number} columns - Number of columns (1, 2, 3, or 4)
  */
-function generatePdfFile(comments, filename) {
+function generatePdfFile(
+  comments,
+  filename,
+  title,
+  fontSize = 11,
+  columns = 1
+) {
   return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ margin: 50 });
+    const doc = new PDFDocument({
+      margin: 50,
+      size: "A4",
+    });
     const stream = fsSync.createWriteStream(filename);
 
     stream.on("finish", resolve);
@@ -86,33 +98,109 @@ function generatePdfFile(comments, filename) {
 
     doc.pipe(stream);
 
-    // Add title
-    doc.fontSize(20).text("Reddit Thread Comments", { align: "center" });
+    // Page dimensions
+    const pageWidth = doc.page.width - 100; // Total width minus margins
+    const pageHeight = doc.page.height - 100; // Total height minus margins
+    const columnGap = 15; // Gap between columns
+
+    // Calculate column width
+    const columnWidth = (pageWidth - columnGap * (columns - 1)) / columns;
+
+    // Add title (full width) - use user's title
+    doc.fontSize(20).text(title, 50, 50, {
+      align: "center",
+      width: pageWidth,
+    });
     doc.moveDown(2);
 
-    // Add each comment
-    comments.forEach((comment, index) => {
-      if (index > 0) {
-        doc.moveDown();
-        doc
-          .strokeColor("#cccccc")
-          .lineWidth(1)
-          .moveTo(50, doc.y)
-          .lineTo(550, doc.y)
-          .stroke();
-        doc.moveDown();
-      }
+    if (columns === 1) {
+      // Single column layout
+      comments.forEach((comment, index) => {
+        if (index > 0) {
+          doc.moveDown();
+          doc
+            .strokeColor("#cccccc")
+            .lineWidth(1)
+            .moveTo(50, doc.y)
+            .lineTo(550, doc.y)
+            .stroke();
+          doc.moveDown();
+        }
 
-      doc.fontSize(11).fillColor("#000000").text(comment, {
-        align: "left",
-        lineGap: 5,
+        doc.fontSize(fontSize).fillColor("#000000").text(comment, {
+          align: "left",
+          lineGap: 5,
+        });
+
+        // Check if we need a new page
+        if (doc.y > 700 && index < comments.length - 1) {
+          doc.addPage();
+        }
       });
+    } else {
+      // Multi-column layout - flow content across columns naturally
+      const columnStartX = 50;
+      const startY = doc.y;
+      let currentColumn = 0;
+      let columnY = startY;
+      let isFirstPage = true;
 
-      // Check if we need a new page
-      if (doc.y > 700 && index < comments.length - 1) {
-        doc.addPage();
-      }
-    });
+      comments.forEach((comment, commentIndex) => {
+        const x = columnStartX + currentColumn * (columnWidth + columnGap);
+
+        // Add separator between comments (but not at the very start)
+        if (commentIndex > 0) {
+          doc
+            .strokeColor("#cccccc")
+            .lineWidth(0.5)
+            .moveTo(x, columnY)
+            .lineTo(x + columnWidth, columnY)
+            .stroke();
+          columnY += 8;
+        }
+
+        // Calculate height for this comment
+        const heightTest = doc.heightOfString(comment, {
+          width: columnWidth,
+          align: "left",
+          lineGap: 3,
+        });
+
+        // Check if comment fits in current column
+        if (columnY + heightTest > pageHeight + 50) {
+          // Move to next column
+          currentColumn++;
+
+          if (currentColumn >= columns) {
+            // All columns filled, start new page
+            doc.addPage();
+            currentColumn = 0;
+            columnY = 50; // Start from top of new page (no title)
+            isFirstPage = false;
+          } else {
+            // Move to top of next column on same page
+            columnY = isFirstPage ? startY : 50;
+          }
+        }
+
+        // Recalculate X position for current column
+        const currentX =
+          columnStartX + currentColumn * (columnWidth + columnGap);
+
+        // Draw comment
+        doc
+          .fontSize(fontSize)
+          .fillColor("#000000")
+          .text(comment, currentX, columnY, {
+            width: columnWidth,
+            align: "left",
+            lineGap: 3,
+          });
+
+        // Update Y position for next comment
+        columnY += heightTest + 10;
+      });
+    }
 
     doc.end();
   });
@@ -145,6 +233,32 @@ async function getUserPreferences() {
         }
         return true;
       },
+    },
+    {
+      type: "list",
+      name: "fontSize",
+      message: "Select font size:",
+      choices: [
+        { name: "Small (9pt)", value: 9 },
+        { name: "Medium (11pt)", value: 11 },
+        { name: "Large (13pt)", value: 13 },
+        { name: "Extra Large (15pt)", value: 15 },
+      ],
+      default: 11,
+      when: answers => answers.format === "pdf",
+    },
+    {
+      type: "list",
+      name: "columns",
+      message: "Select PDF layout:",
+      choices: [
+        { name: "1 Column (Standard)", value: 1 },
+        { name: "2 Columns", value: 2 },
+        { name: "3 Columns", value: 3 },
+        { name: "4 Columns", value: 4 },
+      ],
+      default: 1,
+      when: answers => answers.format === "pdf",
     },
   ]);
 
@@ -194,7 +308,7 @@ async function main() {
     progressBar.stop();
     console.log(`\n✓ Found ${comments.length} comments\n`);
 
-    const { format, filename } = await getUserPreferences();
+    const { format, filename, fontSize, columns } = await getUserPreferences();
     const outputFile = `${filename}.${format}`;
 
     progressBar.start(100, 50, { stage: "Preparing output..." });
@@ -212,7 +326,13 @@ async function main() {
         await generateMdFile(comments, outputFile);
         break;
       case "pdf":
-        await generatePdfFile(comments, outputFile);
+        await generatePdfFile(
+          comments,
+          outputFile,
+          filename,
+          fontSize,
+          columns
+        );
         break;
     }
 
